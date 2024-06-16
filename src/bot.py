@@ -2,7 +2,7 @@ import logging
 from telegram import Update
 from telegram.ext import Application, CommandHandler, ContextTypes
 from config import BOT_TOKEN
-from src.handlers import register_handlers
+from handlers import register_handlers
 
 # Enable logging
 logging.basicConfig(

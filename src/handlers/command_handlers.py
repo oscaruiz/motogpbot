@@ -1,10 +1,9 @@
 from telegram import Update
 from telegram.ext import CommandHandler, ContextTypes
-from src.services.motogp_service import MotoGPService
+from services.motogp_service import MotoGPService
 from config import MOTOGP_API_URL
-
+from dateutil import parser
 import datetime
-
 
 # Initialize the MotoGP service
 motogp_service = MotoGPService(MOTOGP_API_URL)
@@ -13,65 +12,44 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Send a message when the command /start is issued."""
     await update.message.reply_text('Hello! I am your Telegram bot.')
 
-async def get_current_race(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Handler for the /current command."""
-    next_race_data = motogp_service.get_races()
+async def get_race_data(update: Update, context: ContextTypes.DEFAULT_TYPE, race_type: str):
+    """Fetch race data based on race type (current, next, previous)."""
+    race_data = motogp_service.get_races()
 
-    current_event = next_race_data.get('current_event', None)
-    
-    if not current_event:
-        await update.message.reply_text("There is no current event happening at the moment.")
+    if not race_data:
+        await update.message.reply_text("Race information is not available at the moment.")
         return
 
-    if next_race_data:
-        event_name = next_race_data.get('current_event', {}).get('name', 'No upcoming race name available')
-        event_dates = next_race_data.get('current_event', {}).get('dates', 'Dates not available')
-        event_circuit = next_race_data.get('current_event', {}).get('circuit', 'Circuit not available')
-        event_country = next_race_data.get('current_event', {}).get('country', 'Country not available')
+    race_info = race_data.get(race_type, None)
+    
+    if race_info:
+        event_name = race_info.get('name', 'Race name not available')
+        event_dates = race_info.get('dates', 'Dates not available')
+        event_circuit = race_info.get('circuit', 'Circuit not available')
+        event_country = race_info.get('country', 'Country not available')
         
-        session_times = next_race_data.get('current_event', {}).get('key_session_times', [])
+        session_times = race_info.get('key_session_times', [])
         sessions_info = "\n".join([f"{session['session_shortname']}: {session['session_name']} - {format_date(session['start_datetime_utc'])}" for session in session_times])
 
-        await update.message.reply_text(f"The next MotoGP race is the {event_name}, which will take place at {event_circuit} in {event_country} from {event_dates}.\n\nSession Times:\n{sessions_info}")
+        message = format_race_message(event_name, event_dates, event_circuit, event_country, sessions_info)
+        await update.message.reply_text(message)
     else:
-        reply_text = "No upcoming MotoGP race information available."
-        await update.message.reply_text(reply_text)
-    
+        await update.message.reply_text("No race information available.")
+
 async def get_next_race(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Handler for the /proxima command."""
-    next_race_data = motogp_service.get_races()
+    race_data = motogp_service.get_races()
 
-    if next_race_data:
-        event_name = next_race_data.get('upcoming_event', {}).get('name', 'No upcoming race name available')
-        event_dates = next_race_data.get('upcoming_event', {}).get('dates', 'Dates not available')
-        event_circuit = next_race_data.get('upcoming_event', {}).get('circuit', 'Circuit not available')
-        event_country = next_race_data.get('upcoming_event', {}).get('country', 'Country not available')
-        
-        session_times = next_race_data.get('upcoming_event', {}).get('key_session_times', [])
-        sessions_info = "\n".join([f"{session['session_shortname']}: {session['session_name']} - {format_date(session['start_datetime_utc'])}" for session in session_times])
-
-        await update.message.reply_text(f"The next MotoGP race is the {event_name}, which will take place at {event_circuit} in {event_country} from {event_dates}.\n\nSession Times:\n{sessions_info}")
+    current_event = race_data.get('current_event', None)
+    
+    if current_event:
+        await get_race_data(update, context, 'current_event')
     else:
-        reply_text = "No upcoming MotoGP race information available."
-        await update.message.reply_text(reply_text)
+        await get_race_data(update, context, 'upcoming_event')
 
-async def  get_previous_race(update: Update, context: ContextTypes.DEFAULT_TYPE):
+async def get_previous_race(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Handler for the /anterior command."""
-    previous_race_data = motogp_service.get_races()
-
-    if previous_race_data:
-        event_name = previous_race_data.get('past_event', {}).get('name', 'No upcoming race name available')
-        event_dates = previous_race_data.get('past_event', {}).get('dates', 'Dates not available')
-        event_circuit = previous_race_data.get('past_event', {}).get('circuit', 'Circuit not available')
-        event_country = previous_race_data.get('past_event', {}).get('country', 'Country not available')
-        
-        session_times = previous_race_data.get('past_event', {}).get('key_session_times', [])
-        sessions_info = "\n".join([f"{session['session_shortname']}: {session['session_name']} - {format_date(session['start_datetime_utc'])}" for session in session_times])
-
-        await update.message.reply_text(f"The previous MotoGP race was the {event_name}, which took place at {event_circuit} in {event_country} from {event_dates}.")
-    else:
-        reply_text = "No previous MotoGP race information available."
-        await update.message.reply_text(reply_text)
+    await get_race_data(update, context, 'past_event')
 
 async def get_driver_results(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Handler for the /driver_results command."""
@@ -95,6 +73,11 @@ async def get_driver_results(update: Update, context: ContextTypes.DEFAULT_TYPE)
     else:
         await update.message.reply_text("Driver results information is not available at the moment.")
 
+def format_race_message(event_name, event_dates, event_circuit, event_country, sessions_info):
+    """Format the race information into a readable message."""
+    return (f"The {event_name} is taking place at {event_circuit} in {event_country} from {event_dates}.\n\n"
+            f"Session Times:\n{sessions_info}")
+
 def register_handlers(application):
     """Register command handlers."""
     application.add_handler(CommandHandler('start', start))
@@ -104,25 +87,22 @@ def register_handlers(application):
 
 def format_date(date_str):
     """Format date string to a more readable format with 2 hours added."""
-    print("ATTENTION!!!!!!!!")
-    # Remove 'Z' if it exists
-    if date_str.endswith('Z'):
-        date_str = date_str[:-1]
-    
-    # Parse the date string
-    try:
-        date_obj = datetime.datetime.strptime(date_str, "%Y-%m-%dT%H:%M:%S.%f")
-    except ValueError:
-        date_obj = datetime.datetime.strptime(date_str, "%Y-%m-%dT%H:%M:%S")
-    
-    # Print the parsed datetime before adding timedelta
-    print("Parsed datetime (before adding timedelta):", date_obj)
+    # Parse the date string with dateutil.parser
+    date_obj = parser.parse(date_str)
     
     # Add timedelta of 2 hours
     date_obj += datetime.timedelta(hours=2)
     
-    # Print the parsed datetime after adding timedelta
-    print("Parsed datetime (after adding timedelta):", date_obj)
+    # Format the adjusted datetime into a readable format
+    formatted_date = date_obj.strftime("%Y-%m-%d %H:%M:%S")
+    
+    return formatted_date
+    """Format date string to a more readable format with 2 hours added."""
+    # Parse the date string with dateutil.parser
+    date_obj = parser.parse(date_str)
+    
+    # Add timedelta of 2 hours
+    date_obj += datetime.timedelta(hours=2)
     
     # Format the adjusted datetime into a readable format
     formatted_date = date_obj.strftime("%Y-%m-%d %H:%M:%S")
