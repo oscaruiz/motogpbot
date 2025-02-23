@@ -19,3 +19,8 @@ class MotoGPService(MotoGPBaseService):
     def get_driver_results(self) -> dict:
         endpoint = "/stat/standings-short?class=MotoGP"
         return self._get_data(endpoint)
+
+    def get_next_races(self) -> dict:
+        endpoint = "/schedule?filter=upcoming"
+        return self._get_data(endpoint)
+
