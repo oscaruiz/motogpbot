@@ -16,7 +16,7 @@ class MotoGPService(MotoGPBaseService):
         endpoint = "/events"
         return self._get_data(endpoint)
 
-    def get_driver_results(self) -> dict:
+    def get_rider_standings(self) -> dict:
         endpoint = "/stat/standings-short?class=MotoGP"
         return self._get_data(endpoint)
 
