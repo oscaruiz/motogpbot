@@ -1,5 +1,4 @@
 # MotoGP Telegram Bot
-
 This is a Telegram bot for MotoGP fans, providing real-time information about the latest and upcoming races, driver standings, and more. The bot is built with Python, leveraging the `python-telegram-bot` library and a MotoGP API to fetch race data and results.
 
 ## Features
@@ -32,3 +31,4 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 
 - [`python-telegram-bot`](https://github.com/python-telegram-bot/python-telegram-bot)
 - [`MotoTiming API`](https://mototiming.live/)
+
