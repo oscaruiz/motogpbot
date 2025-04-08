@@ -1,33 +1,29 @@
 import logging
-from telegram import Update
-from telegram.ext import Application, CommandHandler, ContextTypes
-from config import BOT_TOKEN
-from handlers import register_handlers
+from telegram.ext import Application
+from src.config import BOT_TOKEN
+from src.handlers.command_router import register_handlers
 
-# Enable logging
+
+# Configure logging
 logging.basicConfig(
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
     level=logging.INFO
 )
 logger = logging.getLogger(__name__)
 
-# Check if the token is retrieved successfully
-if not BOT_TOKEN:
-    raise ValueError("No BOT_TOKEN provided")
-
-async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Send a message when the command /start is issued."""
-    await update.message.reply_text('Hello! I am your Telegram bot.')
-
 def main():
-    """Start the bot."""
+    """Start the MotoGP Telegram bot."""
+    if not BOT_TOKEN:
+        raise ValueError("No BOT_TOKEN provided in config.py or .env")
+
     application = Application.builder().token(BOT_TOKEN).build()
 
-    # Register handlers
+    # Register command handlers
     register_handlers(application)
 
-    # Run the bot
+    # Start polling
+    logger.info("Bot is starting...")
     application.run_polling()
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
