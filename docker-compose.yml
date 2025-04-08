@@ -1,0 +1,10 @@
+version: '3.8'
+
+services:
+  motogp-bot:
+    build: .
+    container_name: motogp-bot
+    restart: unless-stopped
+    environment:
+      - TELEGRAM_API_TOKEN=${TELEGRAM_API_TOKEN}
+      - MOTOGP_API_URL=${MOTOGP_API_URL}
