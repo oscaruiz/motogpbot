@@ -22,8 +22,6 @@ async def get_previous_race(update: Update, context: ContextTypes.DEFAULT_TYPE):
     country_code = event.get("country_code", "unknown")
     country_flag = f":flag_{country_code.lower()}:" if country_code else ""
 
-    # Optional: no 'winner' field found in the data you posted
-    # So we leave winner out or simulate it
     message = (
         f"🏁 Last MotoGP Race {race_name}\n"
         f"📍 Location: {location}\n"
