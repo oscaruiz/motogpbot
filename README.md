@@ -4,9 +4,9 @@ This is a Telegram bot for MotoGP fans, providing real-time information about th
 ## Features
 
 - `/start` - Greets the user and initializes the bot.
-- `/proxima` - Shows information about the next upcoming race, including race dates, location, and session times.
-- `/anterior` - Displays information about the previous race.
-- `/pilotos` - Fetches the current driver standings and updates.
+- `/next` - Shows information about the next upcoming race, including race dates, location, and session times.
+- `/previous` - Displays information about the previous race.
+- `/standings` - Fetches the current driver standings and updates.
   
 ## Requirements
 
